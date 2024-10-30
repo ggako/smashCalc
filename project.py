@@ -2,6 +2,7 @@ import csv
 import numpy as np
 import os
 import pandas as pd
+import random
 
 
 def standingRead(filename):
@@ -151,11 +152,109 @@ def compileData(folderName):
     return data
 
 
+def smashSimulation(data, teams, standings, threshold, numTrials):
+    """
+    Output: probability of each team getting 1,2,3,4,5,6....16th place 
+    
+    Returns: 
+
+    numpy array of results in win count format
+    # Rows represent team, columns represent placement 
+
+    List containing number of rounds until a champion wins
+    """
+
+    # Note results contains the information of how many times a team got / tally of a certain placement during simulation
+    results = np.zeros((len(teams), len(teams)), dtype=int) 
+    placements = list(range(len(teams)))
+    totalGames = np.shape(data)[1]
+    
+
+    # Simulate tournaments
+    # for _ in range(numTrials):
+    for x in range(numTrials):
+
+        if x % 10000 == 0:
+            print(x)
+
+        # Make copy of current standings
+        standingsCopy = standings.copy()
+
+        # Initialize winner indicator (Set to False: implies tournament is ongoing)
+        winnerExist = False 
+
+        # Simulate games
+        while winnerExist == False:
+
+            # Select random game - will be selected via index
+            gameIndex = random.randint(0, totalGames - 1)
+            gamePoints = data[:,gameIndex]
+
+            # Shuffle placements (Teams will be assigned a random placement based from this list)
+            np.random.shuffle(placements)
+
+            # Check for teams over threshold (list of size 16 with 1/0 values: 1 means over threshold 0 below threshold)
+            overThresholdBefore = [x >= threshold for x in standingsCopy]
+            # Get indices of teams over the threshold
+            indicesOverThreshold = [i for i in range(len(overThresholdBefore)) if overThresholdBefore[i] == 1]
+
+            # Add points to current standing
+            for k in range(16):
+                standingsCopy[k] += gamePoints[placements[k]][2] # Adding points
+
+            # Check if there are teams over the threshold that won
+
+            # Extract placements from gamePoints array (will be a list of size 16)
+            gamePlacement = gamePoints[:,0]
+
+            # Important: Reorder gamePlacement extracted according to the earlier shuffled placements array
+            gamePlacement = [gamePlacement[i] for i in placements]
+
+            # Convert gamePlacement to a 1/0 array where 1 indicates winner, 0 for the rest
+            gamePlacement = [1 if i == 1 else 0 for i in gamePlacement]
+
+            # Get index of the winner
+            winnerIndex = gamePlacement.index(1)
+
+            # Check if winner index (of current round) is in indicesOverThreshold
+            if winnerIndex in indicesOverThreshold:
+                winnerExist = True
+        
+        # Initialize tournPlacement array (all zeroes)
+        tournPlacement = [None] * 16
+
+        # Assign first place to winner (note that 0 implies first place)
+        tournPlacement[winnerIndex] = 0
+
+        # Remove winner's score in standingsCopy array (so the rest of the teams can be ranked)
+        # Removed since ranking is done by using the max function (Arbitrarily set to -1)
+        standingsCopy[winnerIndex] = -1
+
+        # Assign tournPlacement for the rest of the teams based on their score
+        # range 15 - since 15 remaining teams
+        for i in range(1,16):
+
+            # Get index of the team with the max score
+            maxIndex = standingsCopy.index(max(standingsCopy))
+
+            # Remove winner's score in standingsCopy array (so the rest of the teams can be ranked)
+            # Removed since ranking is done by using the max function (Arbitrarily set to -1)
+            standingsCopy[maxIndex] = -1
+
+            # Assign tournPlacement
+            tournPlacement[maxIndex] = i
+
+        # Add placement to result
+        for k in range(16):
+            results[k][tournPlacement[k]] += 1
+
+    return results
+
+
 def main():
     pass
 
 
 if __name__ == "__main__":
     main()
-
 
