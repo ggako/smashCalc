@@ -1,6 +1,38 @@
 import csv
 import numpy as np
 import os
+import pandas as pd
+
+
+def standingRead(filename):
+    """
+    Input: filename of standing
+
+    Reads teams and current standing data
+
+    Returns two list (team and standing)
+    """
+    data = np.loadtxt(filename, delimiter=",", dtype=str).transpose().tolist()
+
+    # Read as numpy array, transpose then convert to list
+    data = np.loadtxt(filename, delimiter=",", dtype=str).transpose().tolist()
+
+    # Check if loaded array is correct shape (2,16) array
+    if np.shape(data)[0] != 2:
+        raise Exception('Standings csv data should contain 2 columns (teams and standings)')
+
+    if np.shape(data)[1] != 16:
+        raise Exception('Standings csv data should contain 16 rows / team')
+
+    teams = data[0]
+    standings = [int(x) for x in data[1]]
+
+    # Sort the data (create dataframe and sort by standing)
+    dict = {'teams':teams, 'standings':standings}# Create data dictionary
+    df = pd.DataFrame(dict).sort_values(by = 'standings', ascending=False)  
+
+    return df['teams'].tolist(), df['standings'].tolist()
+
 
 def readData(filename):
     """
@@ -76,7 +108,7 @@ def readData(filename):
     # Convert data to numpy array 
     data = np.array(rows)            
 
-    # Note data size is: (16, # of games, 2)
+    # Note data size is: (16, # of games, 3)
     return data
 
 
