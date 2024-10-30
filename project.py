@@ -6,8 +6,8 @@ def readData(filename):
     """
     Reads csv file
 
-    Return numpy array of shape (16, number of rounds, 2)
-    Note: last dimension corresponds to [placement, kills]
+    Return numpy array of shape (16, number of rounds, 3)
+    Note: last dimension corresponds to [placement, kills, total points]
     """
 
     with open(filename) as file:
@@ -35,10 +35,36 @@ def readData(filename):
                 if index % 2 == 0:
                     placement = int(row[index])
 
-                # Odd case: Kills
+                # Odd case: Kills & Total Points & Appending
                 else:
                     kills = int(row[index])
-                    processedRow.append((placement, kills))
+
+                    # Create game with no points
+                    points = 0
+
+                    # Add placement points
+                    if placement == 1:
+                        points += 10
+                    elif placement == 2:
+                        points += 6
+                    elif placement == 3:
+                        points += 5
+                    elif placement == 4:
+                        points += 4
+                    elif placement == 5:
+                        points += 3
+                    elif placement == 6:
+                        points += 2
+                    elif placement == 7 or placement == 8:
+                        points += 1
+                    # No added placement points outside top 8
+                    else:
+                        pass
+
+                    # Add kill points
+                    points += kills
+
+                    processedRow.append((placement, kills, points))
 
             # Add processsed row to rows
             rows.append(processedRow)
@@ -99,3 +125,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
