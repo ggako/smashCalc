@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+import os
 
 def readData(filename):
     """
@@ -52,3 +53,49 @@ def readData(filename):
     # Note data size is: (16, # of games, 2)
     return data
 
+
+def compileData(folderName):
+    """
+    Combines all data from all files in folder - including subfolders
+    Assumes csv file is in correct readable format
+    Note: Calls readData function
+
+    Returns numpy array of shape (16, number of rounds from all files)
+    """
+
+    # Initialize file name list
+    filelist = []
+
+    # Get all csv files in folder
+    for root, dirs, files in os.walk(folderName):
+        for file in files:
+            #append the file name to the list
+            if(file.endswith(".csv")):
+                filelist.append(os.path.join(root,file))
+
+    # Check if file is empty
+    if len(filelist) == 0:
+        raise Exception("No csv files found")
+
+    # Initialize data
+    dataExist = False # Used for initialization
+
+    # Fill data variable
+    for name in filelist:
+        # Initialization case
+        if dataExist == False:
+            data = readData(name)
+            dataExist = True
+        # Concatenate data column wise
+        else:
+            data = np.concatenate((data, readData(name)), axis=1)
+
+    return data
+
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()
